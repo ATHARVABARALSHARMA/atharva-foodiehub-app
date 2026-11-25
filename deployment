@@ -1,0 +1,63 @@
+# FoodieHub — Netlify Deployment Guide
+
+This guide covers deploying the **FoodieHub** frontend to **Netlify**, configuring client-side routing, and connecting to your backend.
+
+---
+
+## 1. Pre-configured Netlify Setup
+
+The project has already been configured with:
+- **`frontend/netlify.toml`**: Build commands, publish directory (`dist`), and SPA redirect rules.
+- **`frontend/public/_redirects`**: Fallback routing rule (`/* /index.html 200`) so React Router pages work on direct refresh.
+- **`frontend/src/services/api.js`**: Dynamic backend base URL support via `VITE_API_URL`.
+- **Production Build**: Generated in `frontend/dist`.
+
+---
+
+## 2. Deployment Options
+
+### Option 1: Instant Drag-and-Drop (Netlify Drop — Zero Config)
+1. Open [app.netlify.com/drop](https://app.netlify.com/drop) in your browser.
+2. Sign in to your Netlify account (or create a free account).
+3. Drag and drop the `frontend/dist` folder:
+   ```
+   c:\Users\athar\AppData\Local\antigravity\foodiehub\frontend\dist
+   ```
+4. Netlify will deploy your site in seconds and provide a live URL (`https://<random-name>.netlify.app`).
+
+---
+
+### Option 2: Netlify CLI Deployment
+Run the following in PowerShell:
+```powershell
+# 1. Login to Netlify (opens browser authentication)
+$env:PATH = "C:\Program Files\nodejs;" + $env:PATH
+cd "c:\Users\athar\AppData\Local\antigravity\foodiehub\frontend"
+& "C:\Program Files\nodejs\npx.cmd" netlify-cli login
+
+# 2. Deploy to production
+& "C:\Program Files\nodejs\npx.cmd" netlify-cli deploy --prod --dir=dist
+```
+
+---
+
+### Option 3: Git Repository Link (CI/CD)
+1. Push this repository to GitHub or GitLab.
+2. In Netlify Dashboard, click **Add new site** > **Import an existing project**.
+3. Select your repository. Netlify will automatically detect the settings from `netlify.toml`:
+   - **Base directory**: `frontend`
+   - **Build command**: `npm run build`
+   - **Publish directory**: `frontend/dist`
+4. Click **Deploy Site**. Every `git push` will now trigger an automated deployment.
+
+---
+
+## 3. Connecting Frontend to Backend in Production
+
+Netlify serves the frontend React application. The Express + MongoDB backend runs as a continuous Node.js service:
+1. **Backend Hosting**: Deploy the `/backend` folder to a Node host such as [Render](https://render.com), [Railway](https://railway.app), or [Fly.io](https://fly.io).
+2. **Database**: Use a free cloud database cluster from [MongoDB Atlas](https://www.mongodb.com/atlas).
+3. **Environment Variable**:
+   In Netlify: **Site configuration** > **Environment variables** > **Add a variable**:
+   - `VITE_API_URL` = `https://your-backend-api.onrender.com`
+4. Re-trigger the build on Netlify.
