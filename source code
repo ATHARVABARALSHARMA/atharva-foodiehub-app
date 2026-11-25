@@ -1,1 +1,194 @@
+# FoodieHub — Complete Source Code Inventory & Manifest
+
+*FoodieHub is a full-stack, production-grade food delivery application tailored for students and budget-conscious foodies across the Top 10 Indian Metros (Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, Kolkata, Pune, Ahmedabad, Jaipur, Chandigarh).*
+
+---
+
+## 1. Directory Tree & File Inventory
+
+```
+foodiehub/
+├── docs/
+│   └── ARCHITECTURE.md                  # Comprehensive architectural blueprints & state machine
+├── backend/
+│   ├── .env                             # Local environment variables
+│   ├── .env.example                     # Sample template for configuration
+│   ├── .eslintrc.json                   # ESLint standards
+│   ├── .prettierrc                      # Prettier code formatting rules
+│   ├── jest.config.js                   # Jest test runner & coverage thresholds
+│   ├── package.json                     # Express, Mongoose, Zod, bcryptjs, Supertest
+│   ├── server.js                        # HTTP server startup & graceful shutdown
+│   ├── seeds/
+│   │   ├── seedData.js                  # 16 authentic Indian restaurants, 120 items, users, coupons
+│   │   └── runSeed.js                   # Automated database seeder
+│   ├── src/
+│   │   ├── app.js                       # Express app with Helmet, CORS, Compression, Rate Limiter
+│   │   ├── config/
+│   │   │   ├── db.js                    # Resilient Mongoose connection manager
+│   │   │   └── env.js                   # Centralized env loader with defaults
+│   │   ├── controllers/
+│   │   │   ├── adminController.js       # Admin analytics & user moderation
+│   │   │   ├── authController.js        # Auth, JWT cookies, profile & student verification
+│   │   │   ├── cartController.js        # Single-restaurant cart manager
+│   │   │   ├── couponController.js      # Auto-best coupon recommender & bill calculator
+│   │   │   ├── groupOrderController.js  # Collaborative cart & per-person bill split
+│   │   │   ├── liveTrackingController.js# Real-time simulated rider progress
+│   │   │   ├── loyaltyController.js     # Loyalty balance & wallet redemption
+│   │   │   ├── menuController.js        # Menu items CRUD & availability toggling
+│   │   │   ├── orderController.js       # Checkout, 2-min cancellation, reordering
+│   │   │   ├── restaurantController.js  # Directory, metro search & owner CRUD
+│   │   │   └── reviewController.js      # Verified-delivery reviews & rating calculation
+│   │   ├── middlewares/
+│   │   │   ├── auth.js                  # JWT Bearer token validator
+│   │   │   ├── errorHandler.js          # Centralized error handler & 404 handler
+│   │   │   ├── rateLimiter.js           # General, Auth, and Order rate limiters
+│   │   │   ├── rbac.js                  # Role-based access control (Customer, Owner, Admin)
+│   │   │   └── validate.js              # Zod validation middleware for body/params/query
+│   │   ├── models/
+│   │   │   ├── Cart.js                  # Shopping cart model (single-restaurant policy)
+│   │   │   ├── Coupon.js                # Promotional coupon schema & stackability rules
+│   │   │   ├── GroupOrder.js            # Collaborative session with member shares
+│   │   │   ├── MenuItem.js              # Menu item schema with Indian dietary metadata
+│   │   │   ├── Order.js                 # Order schema with 5-stage timeline & price breakdown
+│   │   │   ├── Restaurant.js            # Restaurant directory schema with metro indexing
+│   │   │   ├── Review.js                # Order reviews (gated to delivered orders)
+│   │   │   └── User.js                  # User schema with bcrypt hashing & 5-attempt lockout
+│   │   ├── routes/
+│   │   │   ├── adminRoutes.js
+│   │   │   ├── authRoutes.js
+│   │   │   ├── cartRoutes.js
+│   │   │   ├── couponRoutes.js
+│   │   │   ├── groupOrderRoutes.js
+│   │   │   ├── index.js                 # Master API router
+│   │   │   ├── loyaltyRoutes.js
+│   │   │   ├── menuRoutes.js
+│   │   │   ├── orderRoutes.js
+│   │   │   ├── restaurantRoutes.js
+│   │   │   ├── reviewRoutes.js
+│   │   │   └── trackingRoutes.js
+│   │   ├── services/
+│   │   │   ├── adminService.js          # Analytics aggregation & moderation
+│   │   │   ├── authService.js           # Password validation, tokens & student verification
+│   │   │   ├── cartService.js           # Conflict resolution & server-side pricing
+│   │   │   ├── couponEngineService.js   # Smart recommendation & stackability engine
+│   │   │   ├── groupOrderService.js     # Shareable links & proportional overhead split
+│   │   │   ├── liveTrackingService.js   # Dynamic ETA & rider coordinate simulation
+│   │   │   ├── loyaltyService.js        # 1-pt/₹10 calculation & wallet credit conversion
+│   │   │   ├── menuService.js           # Menu CRUD & availability toggles
+│   │   │   ├── orderService.js          # 5-stage state machine & 2-min cancellation
+│   │   │   ├── paymentService.js        # Idempotent gateway (UPI, Wallet, Card, COD)
+│   │   │   ├── pricingService.js        # Centralized bill calculator
+│   │   │   ├── restaurantService.js     # Query builder with metro filters
+│   │   │   └── studentDiscountService.js# 15% discount (<₹100 cap) + 2-5 PM Free Delivery
+│   │   ├── utils/
+│   │   │   ├── apiResponse.js           # Standardized { success, data, error } wrapper
+│   │   │   ├── asyncHandler.js          # Express async wrapper
+│   │   │   ├── logger.js                # Winston/Morgan logger
+│   │   │   └── token.js                 # JWT access & refresh token signing
+│   │   └── validators/
+│   │       ├── authValidator.js         # Password strength & student email schemas
+│   │       └── coreValidators.js        # Zod schemas for restaurants, cart, orders, reviews
+│   └── tests/
+│       ├── integration/
+│       │   ├── auth.test.js             # Registration, login, lockout, refresh
+│       │   └── cartAndOrders.test.js    # Single-restaurant cart, orders, reviews
+│       ├── security/
+│       │   └── securityAndRbac.test.js  # Invalid tokens, RBAC isolation, NoSQL/XSS checks
+│       └── unit/
+│           ├── moreServices.test.js     # Pricing, payment, admin, tracking, menu services
+│           └── services.test.js         # Student discount, coupon engine, loyalty services
+├── frontend/
+│   ├── index.html                       # Semantic HTML5 shell with responsive viewport
+│   ├── package.json                     # React 18, Vite 5, Tailwind 3, Vitest, Testing Library
+│   ├── postcss.config.js
+│   ├── tailwind.config.js               # Indian saffron/orange theme & dark mode tokens
+│   ├── vite.config.js                   # Proxy, manual chunking, Vitest environment
+│   └── src/
+│       ├── App.jsx                      # Routing, Suspense code-splitting & Context wrappers
+│       ├── main.jsx                     # React root mount
+│       ├── setupTests.js                # @testing-library/jest-dom setup
+│       ├── __tests__/
+│       │   └── components.test.jsx      # WCAG AA assertions for Button, Input, Modal, Badges
+│       ├── components/
+│       │   ├── common/
+│       │   │   ├── Badge.jsx            # Veg (square+circle), Non-Veg (square+triangle), Student
+│       │   │   ├── Button.jsx           # Accessible button with 44px touch target
+│       │   │   ├── Card.jsx             # Surface container with dark mode support
+│       │   │   ├── ConflictModal.jsx    # Single-restaurant conflict warning dialog
+│       │   │   ├── EmptyState.jsx       # Illustrated empty state UI
+│       │   │   ├── ErrorBoundary.jsx    # React error boundary with reload trigger
+│       │   │   ├── Input.jsx            # Form input with label, aria-invalid, helper text
+│       │   │   ├── Modal.jsx            # Accessible dialog with Escape key & backdrop blur
+│       │   │   ├── Rating.jsx           # Star rating badge
+│       │   │   └── Skeleton.jsx         # Shimmer placeholder loader
+│       │   ├── layout/
+│       │   │   ├── Footer.jsx           # Top 10 Indian cities links & student callout
+│       │   │   ├── Navbar.jsx           # Metro selector, search shortcut, cart badge, dark mode
+│       │   │   ├── ProtectedRoute.jsx   # Role guard (Customer, Owner, Admin)
+│       │   │   └── SkipLink.jsx         # WCAG skip-to-content accessibility link
+│       │   ├── order/
+│       │   │   ├── OrderTimeline.jsx    # 5-stage live delivery progress timeline
+│       │   │   └── PriceBreakdown.jsx   # Subtotal, student savings, taxes, delivery fee
+│       │   └── restaurant/
+│       │       ├── FilterBar.jsx        # Debounced search, cuisines, veg-only, budget mode
+│       │       ├── MenuItemCard.jsx     # Veg/Non-Veg icons, calories, protein, qty stepper
+│       │       └── RestaurantCard.jsx   # Image, delivery time, price for two, rating
+│       ├── context/
+│       │   ├── AuthContext.jsx          # User credentials, JWT storage, student verification
+│       │   ├── CartContext.jsx          # Cart items, subtotal, single-restaurant conflict modal
+│       │   ├── CityContext.jsx          # Top 10 Indian Metros selector & localStorage sync
+│       │   ├── ThemeContext.jsx         # Light / Dark theme with OS preference detection
+│       │   └── ToastContext.jsx         # Live region toast notifications
+│       ├── hooks/
+│       │   └── useDebounce.js           # Debounces search inputs by 350ms
+│       ├── pages/
+│       │   ├── AdminDashboardPage.jsx   # GMV, student savings metrics, user moderation table
+│       │   ├── CartCheckoutPage.jsx     # Items, smart coupon auto-apply, bill breakdown, payment
+│       │   ├── GroupOrderPage.jsx       # Share code, member items, proportional split bill
+│       │   ├── HomePage.jsx             # Metro hero, student offers banner, cuisines, top rated
+│       │   ├── LoginPage.jsx            # Validated login with 1-click demo account shortcuts
+│       │   ├── OrderHistoryPage.jsx     # Past orders, reorder button, 5-star review modal
+│       │   ├── OrderTrackingPage.jsx    # Live progress timeline, simulated rider & ETA countdown
+│       │   ├── OwnerDashboardPage.jsx   # Add/edit dish, toggle stock, incoming orders state machine
+│       │   ├── ProfilePage.jsx          # Wallet balance, 1-pt/₹10 loyalty redemption, student badge
+│       │   ├── RegisterPage.jsx         # Password strength checklist & student email validation
+│       │   ├── RestaurantDetailPage.jsx # Sticky category navbar, menu items, floating cart pill
+│       │   └── RestaurantListPage.jsx   # Filtered restaurant grid with pagination
+│       ├── services/
+│       │   └── api.js                   # Axios client with request & 401 refresh interceptors
+│       └── styles/
+│           └── index.css                # Tailwind base, WCAG focus-visible rings, skip-to-content
+├── SOURCE_CODE_MANIFEST.md              # (This file) Complete source code architecture
+└── README.md                            # Comprehensive setup, API docs, and Quality Report
+```
+
+---
+
+## 2. Layered Architecture Implementation
+
+FoodieHub strictly adheres to the clean 4-tier layered architecture:
+
+```
+[ HTTP Requests ]
+       │
+       ▼
+[ Routes Layer ]         (routes/*.js: strictly route declarations & middleware binding)
+       │
+       ▼
+[ Middlewares Layer ]    (auth.js, rbac.js, validate.js, rateLimiter.js, errorHandler.js)
+       │
+       ▼
+[ Controllers Layer ]    (controllers/*.js: req/res mapping & HTTP status codes)
+       │
+       ▼
+[ Services Layer ]       (services/*.js: 100% pure business logic, calculations, rules)
+       │
+       ▼
+[ Data Access Layer ]    (models/*.js: Mongoose models, indexes, bcrypt hooks)
+       │
+       ▼
+[ MongoDB Database ]     (mongodb://127.0.0.1:27017/foodiehub)
+```
+
+No business logic is placed in route files. Every public method is decorated with JSDoc comments. Responses follow the uniform `{ success, message, data, error }` contract.
 
