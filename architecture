@@ -1,0 +1,426 @@
+# FoodieHub — Architecture & System Design Document
+*Next-Generation Food Delivery Platform tailored for Students and Budget-Conscious Users across Top 10 Indian Metros*
+
+---
+
+## 1. Project Folder Structure
+
+```
+foodiehub/
+├── docs/
+│   ├── ARCHITECTURE.md          # Complete architecture, data models, API specs
+│   └── API_REFERENCE.md         # Detailed endpoint contracts and error codes
+├── backend/
+│   ├── .env.example             # Example environment variables
+│   ├── .eslintrc.json           # ESLint linting rules
+│   ├── .prettierrc              # Prettier formatting config
+│   ├── package.json             # Backend dependencies and scripts
+│   ├── server.js                # Server entry point (HTTP + WebSocket/Polling)
+│   ├── src/
+│   │   ├── app.js               # Express application configuration & middleware
+│   │   ├── config/              # Centralized environment, DB, constants
+│   │   │   ├── db.js
+│   │   │   └── env.js
+│   │   ├── constants/           # Roles, OrderStatus, DiscountRules, TopCities
+│   │   │   ├── cities.js
+│   │   │   └── orderStatus.js
+│   │   ├── controllers/         # Request handling & HTTP response mapping
+│   │   │   ├── authController.js
+│   │   │   ├── userController.js
+│   │   │   ├── restaurantController.js
+│   │   │   ├── menuController.js
+│   │   │   ├── cartController.js
+│   │   │   ├── orderController.js
+│   │   │   ├── couponController.js
+│   │   │   ├── reviewController.js
+│   │   │   ├── groupOrderController.js
+│   │   │   └── adminController.js
+│   │   ├── middlewares/         # Auth, validation, rate limiting, error handling
+│   │   │   ├── auth.js
+│   │   │   ├── rbac.js
+│   │   │   ├── validate.js
+│   │   │   ├── errorHandler.js
+│   │   │   └── rateLimiter.js
+│   │   ├── models/              # Mongoose data schemas & indexes
+│   │   │   ├── User.js
+│   │   │   ├── Restaurant.js
+│   │   │   ├── MenuItem.js
+│   │   │   ├── Cart.js
+│   │   │   ├── Order.js
+│   │   │   ├── Coupon.js
+│   │   │   ├── Review.js
+│   │   │   └── GroupOrder.js
+│   │   ├── routes/              # Route definitions (strictly zero business logic)
+│   │   │   ├── index.js
+│   │   │   ├── authRoutes.js
+│   │   │   ├── userRoutes.js
+│   │   │   ├── restaurantRoutes.js
+│   │   │   ├── menuRoutes.js
+│   │   │   ├── cartRoutes.js
+│   │   │   ├── orderRoutes.js
+│   │   │   ├── couponRoutes.js
+│   │   │   ├── reviewRoutes.js
+│   │   │   ├── groupOrderRoutes.js
+│   │   │   └── adminRoutes.js
+│   │   ├── services/            # Pure business logic & algorithms
+│   │   │   ├── authService.js
+│   │   │   ├── studentDiscountService.js
+│   │   │   ├── couponEngineService.js
+│   │   │   ├── pricingService.js
+│   │   │   ├── loyaltyService.js
+│   │   │   ├── groupOrderService.js
+│   │   │   ├── paymentService.js
+│   │   │   └── liveTrackingService.js
+│   │   ├── utils/               # Helpers, token generator, API responses
+│   │   │   ├── apiResponse.js
+│   │   │   ├── asyncHandler.js
+│   │   │   ├── logger.js
+│   │   │   └── token.js
+│   │   └── validators/          # Zod validation schemas
+│   │       ├── authValidator.js
+│   │       ├── restaurantValidator.js
+│   │       ├── orderValidator.js
+│   │       └── cartValidator.js
+│   ├── seeds/                   # Comprehensive seed data for 10 Indian cities
+│   │   ├── seedData.js
+│   │   └── runSeed.js
+│   └── tests/                   # Jest + Supertest suites
+│       ├── unit/
+│       │   ├── studentDiscount.test.js
+│       │   ├── couponEngine.test.js
+│       │   └── pricingService.test.js
+│       ├── integration/
+│       │   ├── auth.test.js
+│       │   ├── cart.test.js
+│       │   └── orders.test.js
+│       └── security/
+│           ├── rbac.test.js
+│           └── injection.test.js
+├── frontend/
+│   ├── index.html
+│   ├── vite.config.js
+│   ├── tailwind.config.js
+│   ├── postcss.config.js
+│   ├── package.json
+│   └── src/
+│       ├── main.jsx
+│       ├── App.jsx
+│       ├── assets/
+│       ├── components/          # Reusable WCAG AA design system
+│       │   ├── common/
+│       │   │   ├── Button.jsx
+│       │   │   ├── Input.jsx
+│       │   │   ├── Card.jsx
+│       │   │   ├── Modal.jsx
+│       │   │   ├── Toast.jsx
+│       │   │   ├── Skeleton.jsx
+│       │   │   ├── Badge.jsx
+│       │   │   ├── Rating.jsx
+│       │   │   ├── EmptyState.jsx
+│       │   │   └── ErrorBoundary.jsx
+│       │   ├── layout/
+│       │   │   ├── Navbar.jsx
+│       │   │   ├── Footer.jsx
+│       │   │   ├── LocationSelector.jsx
+│       │   │   └── SkipLink.jsx
+│       │   ├── restaurant/
+│       │   │   ├── RestaurantCard.jsx
+│       │   │   ├── FilterBar.jsx
+│       │   │   └── MenuItemCard.jsx
+│       │   └── order/
+│       │       ├── OrderTimeline.jsx
+│       │       └── PriceBreakdown.jsx
+│       ├── context/             # Global Auth, Cart, Theme & Toast context
+│       │   ├── AuthContext.jsx
+│       │   ├── CartContext.jsx
+│       │   ├── CityContext.jsx
+│       │   └── ThemeContext.jsx
+│       ├── hooks/               # Custom hooks (useDebounce, useLiveOrder)
+│       │   ├── useDebounce.js
+│       │   └── useLiveOrder.js
+│       ├── pages/               # Routed pages
+│       │   ├── HomePage.jsx
+│       │   ├── RestaurantListPage.jsx
+│       │   ├── RestaurantDetailPage.jsx
+│       │   ├── CartCheckoutPage.jsx
+│       │   ├── OrderTrackingPage.jsx
+│       │   ├── OrderHistoryPage.jsx
+│       │   ├── GroupOrderPage.jsx
+│       │   ├── LoginPage.jsx
+│       │   ├── RegisterPage.jsx
+│       │   ├── ProfilePage.jsx
+│       │   ├── OwnerDashboardPage.jsx
+│       │   └── AdminDashboardPage.jsx
+│       ├── services/            # Axios API client with interceptors
+│       │   └── api.js
+│       └── styles/              # Global styles & design tokens
+│           └── index.css
+└── README.md
+```
+
+---
+
+## 2. Data Models, Fields, Types, Relations & Indexes
+
+### 2.1 User
+- **Fields**:
+  - `_id`: ObjectId
+  - `name`: String (Required, trimmed, 2-50 chars)
+  - `email`: String (Required, unique, lowercase, indexed)
+  - `passwordHash`: String (Required, select: false)
+  - `role`: String (Enum: `['customer', 'restaurant_owner', 'admin']`, Default: `'customer'`, indexed)
+  - `isStudent`: Boolean (Default: false)
+  - `studentVerified`: Boolean (Default: false, indexed)
+  - `studentIdEmail`: String (Optional, verified domain `.edu` / `.ac.in`)
+  - `addresses`: Array of:
+    - `label`: String (`'Home'`, `'Hostel / PG'`, `'Campus'`, `'Office'`)
+    - `street`: String
+    - `city`: String (Indexed)
+    - `state`: String
+    - `pincode`: String
+    - `isDefault`: Boolean
+  - `walletBalance`: Number (Default: 0.0, min: 0)
+  - `loyaltyPoints`: Number (Default: 0, min: 0)
+  - `failedLoginAttempts`: Number (Default: 0)
+  - `lockUntil`: Date (Optional)
+  - `refreshToken`: String (Select: false)
+  - `createdAt`, `updatedAt`: Timestamps
+- **Indexes**:
+  - `{ email: 1 }` (unique)
+  - `{ role: 1 }`
+  - `{ studentVerified: 1 }`
+
+### 2.2 Restaurant
+- **Fields**:
+  - `_id`: ObjectId
+  - `name`: String (Required, trimmed, indexed)
+  - `owner`: ObjectId (Ref: `'User'`, Required, indexed)
+  - `cuisines`: [String] (Indexed, e.g. `['North Indian', 'Biryani', 'South Indian', 'Chaat', 'Mughlai']`)
+  - `city`: String (Indexed, Top 10 Indian Metros: `Mumbai`, `Delhi NCR`, `Bengaluru`, `Hyderabad`, `Chennai`, `Kolkata`, `Pune`, `Ahmedabad`, `Jaipur`, `Chandigarh`)
+  - `address`: String (Required)
+  - `rating`: Number (Default: 4.0, min: 1.0, max: 5.0, indexed)
+  - `totalRatings`: Number (Default: 0)
+  - `avgDeliveryTime`: Number (In minutes, e.g. 25, 30, 45, indexed)
+  - `isVegOnly`: Boolean (Default: false, indexed)
+  - `isOpen`: Boolean (Default: true, indexed)
+  - `image`: String (URL)
+  - `priceForTwo`: Number (Required, e.g. 300, 500, indexed)
+  - `isStudentFavorite`: Boolean (Default: false, indexed)
+  - `createdAt`, `updatedAt`: Timestamps
+- **Indexes**:
+  - `{ city: 1, isOpen: 1, rating: -1 }` (Compound index for primary city feed)
+  - `{ cuisines: 1 }`
+  - `{ priceForTwo: 1 }`
+  - `{ avgDeliveryTime: 1 }`
+  - `{ isVegOnly: 1 }`
+  - `{ name: "text", cuisines: "text", address: "text" }` (Full-text search)
+
+### 2.3 MenuItem
+- **Fields**:
+  - `_id`: ObjectId
+  - `restaurant`: ObjectId (Ref: `'Restaurant'`, Required, indexed)
+  - `name`: String (Required, trimmed, indexed)
+  - `description`: String
+  - `price`: Number (Required, min: 0, indexed)
+  - `category`: String (Required, e.g. `'Thalis & Combos'`, `'Starters'`, `'Biryanis'`, `'Breads & Curries'`, `'Desserts & Beverages'`)
+  - `isVeg`: Boolean (Default: true, indexed)
+  - `isVegan`: Boolean (Default: false)
+  - `isJain`: Boolean (Default: false)
+  - `isAvailable`: Boolean (Default: true, indexed)
+  - `image`: String (URL)
+  - `calories`: Number (e.g. 450 kcal)
+  - `protein`: Number (In grams, e.g. 22g for high-protein filter)
+  - `isStudentSpecial`: Boolean (Default: false, combo/meal under ₹150, indexed)
+  - `createdAt`, `updatedAt`: Timestamps
+- **Indexes**:
+  - `{ restaurant: 1, category: 1 }`
+  - `{ restaurant: 1, isAvailable: 1 }`
+  - `{ price: 1 }`
+  - `{ isStudentSpecial: 1 }`
+
+### 2.4 Cart
+- **Fields**:
+  - `_id`: ObjectId
+  - `user`: ObjectId (Ref: `'User'`, Required, unique, indexed)
+  - `restaurant`: ObjectId (Ref: `'Restaurant'`, Required)
+  - `items`: Array of:
+    - `menuItem`: ObjectId (Ref: `'MenuItem'`, Required)
+    - `name`: String
+    - `price`: Number (Server validated)
+    - `qty`: Number (Min: 1, Max: 50)
+    - `isVeg`: Boolean
+  - `createdAt`, `updatedAt`: Timestamps
+- **Indexes**:
+  - `{ user: 1 }` (Unique)
+
+### 2.5 Order
+- **Fields**:
+  - `_id`: ObjectId
+  - `orderNumber`: String (Unique, e.g. `'FH-DEL-2026-9812'`)
+  - `user`: ObjectId (Ref: `'User'`, Required, indexed)
+  - `restaurant`: ObjectId (Ref: `'Restaurant'`, Required, indexed)
+  - `items`: Array of:
+    - `menuItem`: ObjectId (Ref: `'MenuItem'`)
+    - `name`: String
+    - `price`: Number
+    - `qty`: Number
+    - `itemTotal`: Number
+  - `subtotal`: Number (Required)
+  - `discountsApplied`: Array of:
+    - `type`: String (`'STUDENT_DISCOUNT'`, `'COUPON'`, `'STUDENT_FREE_DELIVERY'`, `'LOYALTY_REDEEM'`)
+    - `code`: String
+    - `amount`: Number
+  - `discountTotal`: Number (Default: 0)
+  - `deliveryFee`: Number (Default: 40)
+  - `tax`: Number (5% GST for Indian restaurants)
+  - `total`: Number (Required)
+  - `status`: String (Enum: `['PLACED', 'ACCEPTED', 'PREPARING', 'OUT_FOR_DELIVERY', 'DELIVERED', 'CANCELLED']`, Default: `'PLACED'`, indexed)
+  - `paymentMethod`: String (Enum: `['COD', 'UPI', 'CARD', 'WALLET']`, Required)
+  - `paymentStatus`: String (Enum: `['PENDING', 'COMPLETED', 'FAILED', 'REFUNDED']`, Default: `'COMPLETED'`)
+  - `idempotencyKey`: String (Indexed)
+  - `deliveryAddress`: Object (Address snapshot)
+  - `scheduledFor`: Date (Optional for Scheduled Orders)
+  - `timeline`: Array of `{ status: String, timestamp: Date, message: String }`
+  - `cancelReason`: String
+  - `createdAt`, `updatedAt`: Timestamps
+- **Indexes**:
+  - `{ user: 1, createdAt: -1 }`
+  - `{ restaurant: 1, status: 1 }`
+  - `{ status: 1 }`
+  - `{ idempotencyKey: 1 }`
+
+### 2.6 Coupon
+- **Fields**:
+  - `code`: String (Unique, uppercase, trimmed, indexed)
+  - `description`: String
+  - `type`: String (Enum: `['PERCENTAGE', 'FLAT']`, Required)
+  - `value`: Number (e.g. 20 for 20% or 50 for ₹50 flat)
+  - `minOrder`: Number (Default: 0)
+  - `maxDiscount`: Number (For percentage coupons, e.g. ₹100 cap)
+  - `validFrom`: Date (Required)
+  - `validTo`: Date (Required, indexed)
+  - `usageLimit`: Number (Max global uses)
+  - `usedCount`: Number (Default: 0)
+  - `isStackableWithStudent`: Boolean (Default: false)
+  - `applicableTo`: String (Enum: `['ALL', 'STUDENTS_ONLY', 'FIRST_ORDER']`, Default: `'ALL'`)
+  - `isActive`: Boolean (Default: true, indexed)
+- **Indexes**:
+  - `{ code: 1 }` (Unique)
+  - `{ isActive: 1, validTo: 1 }`
+
+### 2.7 Review
+- **Fields**:
+  - `_id`: ObjectId
+  - `user`: ObjectId (Ref: `'User'`, Required, indexed)
+  - `restaurant`: ObjectId (Ref: `'Restaurant'`, Required, indexed)
+  - `order`: ObjectId (Ref: `'Order'`, Required, unique, indexed — 1 review per delivered order)
+  - `rating`: Number (Required, 1-5 stars)
+  - `comment`: String (Trimmed, 5-500 chars)
+  - `createdAt`, `updatedAt`: Timestamps
+- **Indexes**:
+  - `{ restaurant: 1, createdAt: -1 }`
+  - `{ order: 1 }` (Unique)
+
+### 2.8 GroupOrder (Split Bill Feature)
+- **Fields**:
+  - `_id`: ObjectId
+  - `code`: String (Unique, 6-character alphanumeric share code, indexed)
+  - `creator`: ObjectId (Ref: `'User'`, Required)
+  - `restaurant`: ObjectId (Ref: `'Restaurant'`, Required)
+  - `members`: Array of:
+    - `name`: String
+    - `userId`: ObjectId (Optional, if logged in)
+    - `items`: Array of `{ menuItem: ObjectId, name: String, price: Number, qty: Number }`
+    - `shareAmount`: Number
+    - `paid`: Boolean
+  - `status`: String (Enum: `['OPEN', 'LOCKED', 'ORDERED', 'CANCELLED']`, Default: `'OPEN'`)
+  - `createdAt`, `updatedAt`: Timestamps
+
+---
+
+## 3. Complete REST API Endpoints Specification
+
+| Method | Endpoint | Auth Required | Role | Purpose |
+|---|---|---|---|---|
+| **Health** | | | | |
+| GET | `/api/health` | No | Any | System health check, uptime, and database connection status |
+| **Auth** | | | | |
+| POST | `/api/auth/register` | No | Any | Register new user (customer/owner) with password strength rules |
+| POST | `/api/auth/login` | No | Any | Login with rate limiting, lockout check; issues JWT & Refresh Token |
+| POST | `/api/auth/refresh-token`| No | Any | Exchange valid refresh token for fresh access token |
+| POST | `/api/auth/logout` | Yes | Any | Clear refresh token & session cookies |
+| GET | `/api/auth/me` | Yes | Any | Retrieve logged-in user profile, wallet balance, loyalty points |
+| PUT | `/api/auth/profile` | Yes | Any | Update profile details and addresses |
+| POST | `/api/auth/verify-student`| Yes | Customer | Verify student status via `.edu`/`.ac.in` email or ID proof |
+| **Restaurants** | | | | |
+| GET | `/api/restaurants` | No | Any | List restaurants with pagination, city filter, search, cuisine, rating, veg |
+| GET | `/api/restaurants/:id` | No | Any | Get restaurant details with categorized menu |
+| POST | `/api/restaurants` | Yes | Owner/Admin| Create a new restaurant profile |
+| PUT | `/api/restaurants/:id` | Yes | Owner/Admin| Update restaurant details (owners restricted to their own) |
+| DELETE| `/api/restaurants/:id` | Yes | Owner/Admin| Delete/deactivate restaurant profile |
+| **Menu Items** | | | | |
+| GET | `/api/restaurants/:id/menu`| No | Any | List all menu items grouped by category with dietary metadata |
+| POST | `/api/restaurants/:id/menu`| Yes | Owner/Admin| Add new menu item with student special tag & dietary flags |
+| PUT | `/api/menu/:id` | Yes | Owner/Admin| Update menu item details, pricing, calories |
+| PATCH | `/api/menu/:id/toggle` | Yes | Owner/Admin| Quick toggle item availability |
+| DELETE| `/api/menu/:id` | Yes | Owner/Admin| Remove item from restaurant menu |
+| **Cart** | | | | |
+| GET | `/api/cart` | Yes | Customer | Fetch current user cart with full server-side price calculation |
+| POST | `/api/cart/items` | Yes | Customer | Add/increment item; warns/resets if switching restaurant |
+| PUT | `/api/cart/items/:menuItemId`| Yes | Customer | Update item quantity in cart |
+| DELETE| `/api/cart/items/:menuItemId`| Yes | Customer | Remove specific item from cart |
+| DELETE| `/api/cart` | Yes | Customer | Empty entire cart |
+| **Coupons & Smart Engine** | | | | |
+| GET | `/api/coupons` | Yes | Any | List active coupons applicable to current user |
+| POST | `/api/coupons/apply` | Yes | Customer | Validate and apply a specific coupon code |
+| GET | `/api/coupons/auto-best` | Yes | Customer | Smart engine: evaluates & suggests the optimal coupon saving |
+| POST | `/api/coupons` | Yes | Admin | Create a new promotional coupon code |
+| **Orders & Checkout** | | | | |
+| POST | `/api/orders` | Yes | Customer | Place order from cart; applies student discount, coupons & tax |
+| GET | `/api/orders` | Yes | Any | Get user order history (or restaurant orders for owners) |
+| GET | `/api/orders/:id` | Yes | Any | Get order details with real-time tracking timeline |
+| POST | `/api/orders/:id/cancel` | Yes | Customer | Cancel order within 2-minute cancellation grace window |
+| POST | `/api/orders/:id/reorder` | Yes | Customer | Instant reorder: loads previous items into cart |
+| PATCH | `/api/orders/:id/status` | Yes | Owner/Admin| Advance order status along the state machine |
+| **Reviews** | | | | |
+| POST | `/api/reviews` | Yes | Customer | Submit review & star rating for delivered order |
+| GET | `/api/restaurants/:id/reviews`| No | Any | Get reviews and ratings for a restaurant |
+| **Group Orders (Split Bill)** | | | | |
+| POST | `/api/group-orders` | Yes | Customer | Create a shared cart link and 6-char group code |
+| GET | `/api/group-orders/:code`| No | Any | Get shared cart status, members, and item breakdown |
+| POST | `/api/group-orders/:code/join`| No | Any | Join group cart as named friend and add items |
+| POST | `/api/group-orders/:code/checkout`| Yes | Customer | Creator finalizes group order with per-person bill split |
+| **Loyalty & Wallet** | | | | |
+| GET | `/api/loyalty/balance` | Yes | Customer | Check loyalty points (1 point per ₹10 spent) |
+| POST | `/api/loyalty/redeem` | Yes | Customer | Convert loyalty points into wallet credit |
+| **Admin Analytics** | | | | |
+| GET | `/api/admin/analytics` | Yes | Admin | Top metrics: orders/day, top restaurants, GMV, student savings |
+| GET | `/api/admin/users` | Yes | Admin | Manage users and override verification status |
+
+---
+
+## 4. Order Status Flow & State Machine
+
+```
+[PLACED]
+   │
+   ├── (Cancelled within 2 mins) ───────────────► [CANCELLED] (Refund to Wallet)
+   │
+   ▼
+[ACCEPTED] (Restaurant confirms kitchen capacity)
+   │
+   ▼
+[PREPARING] (Kitchen cooks fresh meal)
+   │
+   ▼
+[OUT_FOR_DELIVERY] (Delivery partner dispatched, live GPS ETA active)
+   │
+   ▼
+[DELIVERED] (OTP confirmed at doorstep; Loyalty points credited; Review unlocked)
+```
+
+**State Transitions Rules**:
+- Valid transitions: `PLACED` → `ACCEPTED` → `PREPARING` → `OUT_FOR_DELIVERY` → `DELIVERED`.
+- `CANCELLED` is only permitted from `PLACED` (or by Admin in exception cases).
+- Reviews can strictly only be posted when order status === `DELIVERED`.
+- Loyalty points (1 point per ₹10 paid) are awarded upon `DELIVERED`.
